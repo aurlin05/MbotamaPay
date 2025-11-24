@@ -56,13 +56,21 @@ server:
 app:
   jwt:
     secret: ${JWT_SECRET}
-    expiration-ms: ${JWT_EXPIRATION_MS:86400000} # 24 hours
+    expiration-ms: ${JWT_ACCESS_TOKEN_EXPIRATION:900000} # 15 minutes
+    refresh-expiration-ms: ${JWT_REFRESH_TOKEN_EXPIRATION:2592000000} # 30 days
   cinetpay:
     api-key: ${CINETPAY_API_KEY}
     site-id: ${CINETPAY_SITE_ID}
+    username: ${CINETPAY_USERNAME}
+    password: ${CINETPAY_PASSWORD}
     base-url: ${CINETPAY_BASE_URL:https://api-checkout.cinetpay.com/v2/payment}
     notify-url: ${CINETPAY_NOTIFY_URL}
     return-url: ${CINETPAY_RETURN_URL}
+    webhook-secret: ${CINETPAY_WEBHOOK_SECRET}
+  feexpay:
+    api-key: ${FEEXPAY_API_KEY}
+    base-url: ${FEEXPAY_BASE_URL:https://api.feexpay.me}
+    webhook-secret: ${FEEXPAY_WEBHOOK_SECRET}
   mail:
     from: ${MAIL_FROM:noreply@mbotamapay.com}
 

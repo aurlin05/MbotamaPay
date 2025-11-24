@@ -63,6 +63,13 @@ dependencies {
 
     // Utilities
     implementation("org.apache.commons:commons-lang3:3.14.0")
+    implementation("commons-codec:commons-codec:1.16.0")
+
+    // Spring Cloud OpenFeign for payment provider integrations
+    implementation("org.springframework.cloud:spring-cloud-starter-openfeign:4.1.0")
+    
+    // JSON processing for metadata
+    implementation("com.fasterxml.jackson.core:jackson-databind")
 
     // Lombok
     compileOnly("org.projectlombok:lombok")
@@ -84,6 +91,9 @@ dependencies {
     testImplementation("org.testcontainers:testcontainers:1.19.3")
     testImplementation("org.testcontainers:postgresql:1.19.3")
     testImplementation("org.testcontainers:junit-jupiter:1.19.3")
+    
+    // WireMock for mocking external APIs
+    testImplementation("org.wiremock:wiremock-standalone:3.3.1")
 }
 
 tasks.withType<Test> {

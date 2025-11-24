@@ -32,9 +32,13 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final ReferralService referralService;
     private final com.mbotamapay.backend.repository.PasswordResetTokenRepository passwordResetTokenRepository;
+    private final com.mbotamapay.backend.repository.RefreshTokenRepository refreshTokenRepository;
     private final com.mbotamapay.backend.service.EmailService emailService;
     private final WalletService walletService;
     private final com.mbotamapay.backend.service.AuditService auditService;
+
+    @org.springframework.beans.factory.annotation.Value("${app.jwt.refresh-expiration-ms}")
+    private long refreshExpiration;
 
     @Override
     @Transactional
@@ -73,9 +77,11 @@ public class AuthServiceImpl implements AuthService {
         walletService.createWallet(user);
 
         String token = jwtService.generateToken(new CustomUserDetails(user));
+        String refreshToken = createRefreshToken(user);
 
         return AuthResponse.builder()
                 .token(token)
+                .refreshToken(refreshToken)
                 .name(user.getName())
                 .email(user.getEmail())
                 .role(user.getRole().name())
@@ -98,7 +104,7 @@ public class AuthServiceImpl implements AuthService {
             details.put("lockedUntil", user.getLockedUntil().toString());
             details.put("reason", "Account locked due to multiple failed login attempts");
             auditService.logSecurityEvent("ACCOUNT_LOCKED_ACCESS_ATTEMPT", "WARNING", details);
-            
+
             throw new BusinessException("Account is locked. Try again later.");
         }
 
@@ -112,7 +118,7 @@ public class AuthServiceImpl implements AuthService {
                 user.setLockedUntil(null);
                 userRepository.save(user);
             }
-            
+
             // Log successful login
             java.util.Map<String, Object> successDetails = new java.util.HashMap<>();
             successDetails.put("userId", user.getId());
@@ -135,31 +141,136 @@ public class AuthServiceImpl implements AuthService {
             if (attempts >= 5) {
                 user.setLockedUntil(java.time.LocalDateTime.now().plusMinutes(15));
                 userRepository.save(user);
-                
+
                 // Log account locked event with critical severity
                 failDetails.put("lockedUntil", user.getLockedUntil().toString());
                 auditService.logSecurityEvent("ACCOUNT_LOCKED", "CRITICAL", failDetails);
-                
+
                 throw new BusinessException("Account locked due to too many failed attempts.");
             }
 
             userRepository.save(user);
-            
+
             // Log failed login with appropriate severity
             String severity = attempts >= 3 ? "WARNING" : "INFO";
             auditService.logSecurityEvent("LOGIN_FAILED", severity, failDetails);
-            
+
             throw new BusinessException("Invalid credentials");
         }
 
         String token = jwtService.generateToken(new CustomUserDetails(user));
+        String refreshToken = createRefreshToken(user);
 
         return AuthResponse.builder()
                 .token(token)
+                .refreshToken(refreshToken)
                 .name(user.getName())
                 .email(user.getEmail())
                 .role(user.getRole().name())
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public AuthResponse refreshToken(String refreshToken) {
+        // Verify token exists and is valid
+        // Since we store hash, we need to find by hash?
+        // No, we can't find by hash if we don't know the token.
+        // Wait, if we hash the token, we can't lookup by raw token unless we hash it
+        // first.
+        // Yes, we hash the incoming token and look it up.
+
+        // But wait, if I generate a random UUID, I give it to the user.
+        // When user sends it back, I hash it and look up.
+
+        // However, standard practice with opaque tokens is just storing them.
+        // If I hash them, I need to be able to reproduce the hash.
+        // BCrypt is salted, so I can't reproduce the hash easily for lookup without
+        // iterating (bad).
+        // So for lookup, I should use SHA256 (fast, deterministic) or just store the
+        // token if it's a UUID (low risk if DB leaked compared to passwords).
+        // The entity uses `tokenHash`. If I used BCrypt there, I can't lookup.
+        // I should probably use a fast hash or just store it.
+        // Given the entity name `tokenHash`, I'll assume I should use SHA256 or
+        // similar.
+        // OR, I can use the ID of the token + the secret part.
+
+        // Let's assume for now I'll use SHA256 for the hash.
+
+        String tokenHash = hashToken(refreshToken);
+
+        com.mbotamapay.backend.entity.RefreshToken storedToken = refreshTokenRepository.findByTokenHash(tokenHash)
+                .orElseThrow(() -> new BusinessException("Invalid refresh token"));
+
+        if (storedToken.isExpired() || storedToken.getRevoked()) {
+            throw new BusinessException("Refresh token expired or revoked");
+        }
+
+        User user = storedToken.getUser();
+        String newToken = jwtService.generateToken(new CustomUserDetails(user));
+
+        // Rotate refresh token
+        revokeRefreshToken(storedToken);
+        String newRefreshToken = createRefreshToken(user);
+
+        return AuthResponse.builder()
+                .token(newToken)
+                .refreshToken(newRefreshToken)
+                .name(user.getName())
+                .email(user.getEmail())
+                .role(user.getRole().name())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public void logout(String refreshToken) {
+        String tokenHash = hashToken(refreshToken);
+        refreshTokenRepository.findByTokenHash(tokenHash)
+                .ifPresent(this::revokeRefreshToken);
+    }
+
+    private String createRefreshToken(User user) {
+        String token = java.util.UUID.randomUUID().toString();
+        String tokenHash = hashToken(token);
+
+        com.mbotamapay.backend.entity.RefreshToken refreshToken = com.mbotamapay.backend.entity.RefreshToken.builder()
+                .user(user)
+                .tokenHash(tokenHash)
+                .expiresAt(java.time.LocalDateTime.now().plusNanos(refreshExpiration * 1000000))
+                .revoked(false)
+                .build();
+
+        refreshTokenRepository.save(refreshToken);
+        return token;
+    }
+
+    private void revokeRefreshToken(com.mbotamapay.backend.entity.RefreshToken token) {
+        token.setRevoked(true);
+        refreshTokenRepository.save(token);
+    }
+
+    private String hashToken(String token) {
+        // Use SHA-256 for deterministic hashing
+        try {
+            java.security.MessageDigest digest = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] encodedhash = digest.digest(token.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            return bytesToHex(encodedhash);
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new RuntimeException("Error hashing token", e);
+        }
+    }
+
+    private String bytesToHex(byte[] hash) {
+        StringBuilder hexString = new StringBuilder(2 * hash.length);
+        for (int i = 0; i < hash.length; i++) {
+            String hex = Integer.toHexString(0xff & hash[i]);
+            if (hex.length() == 1) {
+                hexString.append('0');
+            }
+            hexString.append(hex);
+        }
+        return hexString.toString();
     }
 
     @Override
@@ -184,7 +295,7 @@ public class AuthServiceImpl implements AuthService {
         // Send email
         emailService.sendEmail(user.getEmail(), "Password Reset Request",
                 "To reset your password, use this token: " + token);
-        
+
         // Log password reset request
         java.util.Map<String, Object> details = new java.util.HashMap<>();
         details.put("userId", user.getId());
@@ -206,7 +317,7 @@ public class AuthServiceImpl implements AuthService {
             expiredDetails.put("email", resetToken.getUser().getEmail());
             expiredDetails.put("tokenExpiry", resetToken.getExpiryDate().toString());
             auditService.logSecurityEvent("PASSWORD_RESET_EXPIRED_TOKEN", "WARNING", expiredDetails);
-            
+
             throw new BusinessException("Token has expired");
         }
 
@@ -215,7 +326,7 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(user);
 
         passwordResetTokenRepository.delete(resetToken);
-        
+
         // Log successful password reset
         java.util.Map<String, Object> details = new java.util.HashMap<>();
         details.put("userId", user.getId());

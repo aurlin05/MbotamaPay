@@ -59,6 +59,12 @@ public class Transaction {
 
     private String description;
 
+    @Column(length = 10)
+    private String currency;
+
+    @Column(name = "provider_reference")
+    private String providerReference;
+
     @CreationTimestamp
     private LocalDateTime createdAt;
 }

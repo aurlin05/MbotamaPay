@@ -26,6 +26,16 @@ services:
       - mbotamapay-network
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
 
+  adminer:
+    image: adminer:latest
+    container_name: mbotamapay-adminer
+    ports:
+      - "8081:8080"
+    networks:
+      - mbotamapay-network
+    environment:
+      ADMINER_DEFAULT_SERVER: host.docker.internal
+
 networks:
   mbotamapay-network:
     driver: bridge

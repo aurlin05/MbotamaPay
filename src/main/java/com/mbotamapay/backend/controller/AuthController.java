@@ -37,6 +37,21 @@ public class AuthController {
         return ResponseEntity.ok(authService.login(request));
     }
 
+    @PostMapping("/refresh-token")
+    @Operation(summary = "Refresh Token", description = "Get new access token using refresh token")
+    public ResponseEntity<AuthResponse> refreshToken(
+            @Valid @RequestBody com.mbotamapay.backend.dto.auth.RefreshTokenRequest request) {
+        return ResponseEntity.ok(authService.refreshToken(request.getRefreshToken()));
+    }
+
+    @PostMapping("/logout")
+    @Operation(summary = "Logout", description = "Revoke refresh token")
+    public ResponseEntity<String> logout(
+            @Valid @RequestBody com.mbotamapay.backend.dto.auth.RefreshTokenRequest request) {
+        authService.logout(request.getRefreshToken());
+        return ResponseEntity.ok("Logged out successfully");
+    }
+
     @PostMapping("/verify-otp")
     @Operation(summary = "Verify OTP", description = "Verifies the OTP code sent to user")
     public ResponseEntity<String> verifyOtp(@Valid @RequestBody VerifyOtpRequest request) {

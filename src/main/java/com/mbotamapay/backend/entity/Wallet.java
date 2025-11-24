@@ -36,8 +36,12 @@ public class Wallet {
     @Positive(message = "Balance must be positive")
     private BigDecimal balance;
 
+    @Column(name = "reserved_balance", nullable = false, precision = 19, scale = 2)
+    @Builder.Default
+    private BigDecimal reservedBalance = BigDecimal.ZERO;
+
     @Column(nullable = false)
-    @Pattern(regexp = "XAF|EUR|USD", message = "Currency must be one of: XAF, EUR, USD")
+    @Pattern(regexp = "XAF|EUR|USD|XOF|CDF", message = "Currency must be one of: XAF, EUR, USD, XOF, CDF")
     private String currency;
 
     @CreationTimestamp
@@ -45,4 +49,12 @@ public class Wallet {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    /**
+     * Get available balance (balance - reserved_balance)
+     * Reserved balance is used for pending payouts/operations
+     */
+    public BigDecimal getAvailableBalance() {
+        return balance.subtract(reservedBalance);
+    }
 }
