@@ -1,0 +1,51 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+  flyway:
+    enabled: true
+    validate-on-migrate: true
+    clean-disabled: true
+    baseline-on-migrate: false
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD}
+  mail:
+    host: ${MAIL_HOST}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+
+# Custom Properties
+app:
+  jwt:
+    secret: ${JWT_SECRET}
+  cinetpay:
+    api-key: ${CINETPAY_API_KEY}
+    site-id: ${CINETPAY_SITE_ID}
+    notify-url: ${CINETPAY_NOTIFY_URL}
+    return-url: ${CINETPAY_RETURN_URL}
+
+logging:
+  level:
+    com.mbotamapay: INFO
+    org.springframework: WARN
+    org.hibernate: WARN
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when-authorized

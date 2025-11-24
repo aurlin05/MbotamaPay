@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: mbotamapay-postgres
+  #   environment:
+  #     POSTGRES_DB: mbotamapay_db
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: password
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   networks:
+  #     - mbotamapay-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: mbotamapay-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - mbotamapay-network
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+
+networks:
+  mbotamapay-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

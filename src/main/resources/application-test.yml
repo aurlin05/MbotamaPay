@@ -1,0 +1,45 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password: 
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        format_sql: false
+  flyway:
+    enabled: false
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  mail:
+    host: localhost
+    port: 1025
+    username: test@mbotamapay.com
+    password: test
+
+# Custom Properties
+app:
+  jwt:
+    secret: test_secret_key_for_testing_purposes_only_minimum_256_bits
+    expiration-ms: 3600000
+  cinetpay:
+    api-key: TEST_API_KEY
+    site-id: TEST_SITE_ID
+    base-url: https://api-checkout.cinetpay.com/v2/payment
+    notify-url: http://localhost:8080/api/v1/payment/callback
+    return-url: http://localhost:8080/api/v1/payment/return
+  mail:
+    from: test@mbotamapay.com
+
+logging:
+  level:
+    com.mbotamapay: INFO
+    org.springframework: WARN
+    org.hibernate: WARN

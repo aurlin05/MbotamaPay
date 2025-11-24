@@ -1,0 +1,41 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/mbotamapay_db}
+    username: ${DB_USERNAME:mbotamapay_admin}
+    password: ${DB_PASSWORD:Aurlin10}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  flyway:
+    enabled: true
+    validate-on-migrate: false
+    clean-disabled: false
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    username: ${MAIL_USERNAME:dev@mbotamapay.com}
+    password: ${MAIL_PASSWORD:dev_password}
+
+# Custom Properties
+app:
+  jwt:
+    secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+  cinetpay:
+    api-key: ${CINETPAY_API_KEY:DEV_API_KEY}
+    site-id: ${CINETPAY_SITE_ID:DEV_SITE_ID}
+    notify-url: ${CINETPAY_NOTIFY_URL:http://localhost:8080/api/v1/payment/callback}
+    return-url: ${CINETPAY_RETURN_URL:http://localhost:8080/api/v1/payment/return}
+
+logging:
+  level:
+    com.mbotamapay: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE

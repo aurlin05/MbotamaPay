@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code de Vérification MbotamaPay</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .otp-code {
+            background-color: #f8f9fa;
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin: 30px 0;
+        }
+        .otp-code h2 {
+            color: #667eea;
+            font-size: 36px;
+            margin: 0;
+            letter-spacing: 8px;
+        }
+        .message {
+            color: #333;
+            line-height: 1.6;
+            font-size: 16px;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            font-size: 14px;
+            color: #856404;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>🔐 MbotamaPay</h1>
+            <p>Code de Vérification</p>
+        </div>
+        
+        <div class="content">
+            <p class="message">Bonjour,</p>
+            <p class="message">
+                Vous avez demandé un code de vérification pour votre compte MbotamaPay.
+                Utilisez le code ci-dessous pour continuer :
+            </p>
+            
+            <div class="otp-code">
+                <h2 th:text="${otpCode}">123456</h2>
+            </div>
+            
+            <div class="warning">
+                ⚠️ <strong>Important :</strong> Ce code expire dans <strong>5 minutes</strong>.
+                Ne partagez jamais ce code avec personne.
+            </div>
+            
+            <p class="message">
+                Si vous n'avez pas demandé ce code, veuillez ignorer cet email.
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>© 2025 MbotamaPay - Plateforme de paiement sécurisée</p>
+            <p>Ceci est un email automatique, merci de ne pas répondre.</p>
+        </div>
+    </div>
+</body>
+</html>
