@@ -21,25 +21,25 @@ public class CinetPayProvider implements PaymentProvider {
     private final CinetPayClient cinetPayClient;
     private final CinetPayPaymentClient cinetPayPaymentClient;
 
-    @Value("${cinetpay.api-key}")
+    @Value("${app.cinetpay.api-key}")
     private String apiKey;
 
-    @Value("${cinetpay.site-id}")
+    @Value("${app.cinetpay.site-id}")
     private String siteId;
 
-    @Value("${cinetpay.username:}")
+    @Value("${app.cinetpay.username:}")
     private String username;
 
-    @Value("${cinetpay.password:}")
+    @Value("${app.cinetpay.password:}")
     private String password;
 
-    @Value("${cinetpay.webhook-secret}")
+    @Value("${app.cinetpay.webhook-secret}")
     private String webhookSecret;
 
-    @Value("${cinetpay.notify-url}")
+    @Value("${app.cinetpay.notify-url}")
     private String notifyUrl;
 
-    @Value("${cinetpay.return-url}")
+    @Value("${app.cinetpay.return-url}")
     private String returnUrl;
 
     private static final List<String> SUPPORTED_COUNTRIES = Arrays.asList("CI", "SN", "ML", "BF", "TG", "BJ", "NE",

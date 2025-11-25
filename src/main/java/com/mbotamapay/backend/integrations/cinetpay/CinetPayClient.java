@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 /**
  * Feign client for CinetPay API
  */
-@FeignClient(name = "cinetpay-client", url = "${cinetpay.base-url}", configuration = CinetPayClientConfig.class)
+@FeignClient(name = "cinetpay-client", url = "${app.cinetpay.base-url}", configuration = CinetPayClientConfig.class)
 public interface CinetPayClient {
 
     /**

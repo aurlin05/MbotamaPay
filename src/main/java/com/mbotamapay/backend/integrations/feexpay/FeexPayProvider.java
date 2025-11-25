@@ -21,7 +21,7 @@ public class FeexPayProvider implements PaymentProvider {
     private final FeexPayClient feexPayClient;
     private final ObjectMapper objectMapper;
 
-    @Value("${feexpay.webhook-secret}")
+    @Value("${app.feexpay.webhook-secret}")
     private String webhookSecret;
 
     private static final List<String> SUPPORTED_COUNTRIES = Arrays.asList("BJ", "TG", "CG", "CI");

@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.*;
  * Feign client for FeexPay API
  * Base URL configured via application properties: feexpay.base-url
  */
-@FeignClient(name = "feexpay-client", url = "${feexpay.base-url}", configuration = FeexPayClientConfig.class)
+@FeignClient(name = "feexpay-client", url = "${app.feexpay.base-url}", configuration = FeexPayClientConfig.class)
 public interface FeexPayClient {
 
     /**

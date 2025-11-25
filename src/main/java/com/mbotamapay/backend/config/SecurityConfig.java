@@ -43,7 +43,8 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",
                                 Routes.ACTUATOR + "/**",
-                                Routes.WS + "/**")
+                                Routes.WS + "/**",
+                                "/api/v1/dev/**")
                         .permitAll()
                         .requestMatchers(Routes.ADMIN + "/**").hasRole("ADMIN")
                         .anyRequest().authenticated())

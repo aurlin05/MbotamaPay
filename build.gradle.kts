@@ -1,6 +1,6 @@
 plugins {
     java
-    id("org.springframework.boot") version "3.3.5"
+    id("org.springframework.boot") version "3.2.11"
     id("io.spring.dependency-management") version "1.1.4"
 }
 
@@ -38,12 +38,15 @@ dependencies {
     runtimeOnly("org.postgresql:postgresql")
     testRuntimeOnly("com.h2database:h2")
     implementation("org.flywaydb:flyway-core")
-    runtimeOnly("org.flywaydb:flyway-database-postgresql")
+    // runtimeOnly("org.flywaydb:flyway-database-postgresql")
 
     // Security & JWT
     implementation("io.jsonwebtoken:jjwt-api:0.12.3")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.3")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.3")
+    
+    // Jackson Java 8 date/time module (fix for LocalDateTime serialization)
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
 
     // Monitoring
     runtimeOnly("io.micrometer:micrometer-registry-prometheus")

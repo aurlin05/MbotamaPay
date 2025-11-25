@@ -108,9 +108,17 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException("Account is locked. Try again later.");
         }
 
+        // DEBUG: Log password details
+        log.info("DEBUG - User found: {}, Password hash from DB: {}", user.getEmail(), user.getPasswordHash());
+        log.info("DEBUG - Raw password from request: {}", request.getPassword());
+        log.info("DEBUG - Testing password match: {}",
+                passwordEncoder.matches(request.getPassword(), user.getPasswordHash()));
+
         try {
+            log.info("DEBUG - Attempting Spring Security authentication for: {}", user.getEmail());
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(user.getEmail(), request.getPassword()));
+            log.info("DEBUG - Authentication SUCCESS!");
 
             // Reset failed attempts on success
             if (user.getFailedLoginAttempts() > 0) {
@@ -127,6 +135,8 @@ public class AuthServiceImpl implements AuthService {
             auditService.logSecurityEvent("LOGIN_SUCCESS", "INFO", successDetails);
 
         } catch (org.springframework.security.core.AuthenticationException e) {
+            log.error("DEBUG - Authentication FAILED! Exception: {}", e.getMessage(), e);
+
             // Increment failed attempts
             int attempts = user.getFailedLoginAttempts() + 1;
             user.setFailedLoginAttempts(attempts);
