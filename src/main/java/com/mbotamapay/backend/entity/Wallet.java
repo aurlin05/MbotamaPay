@@ -2,7 +2,7 @@ package com.mbotamapay.backend.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -33,7 +33,7 @@ public class Wallet {
     private User user;
 
     @Column(nullable = false, precision = 19, scale = 2)
-    @Positive(message = "Balance must be positive")
+    @PositiveOrZero(message = "Balance must be zero or positive")
     private BigDecimal balance;
 
     @Column(name = "reserved_balance", nullable = false, precision = 19, scale = 2)

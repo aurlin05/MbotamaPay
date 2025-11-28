@@ -1,6 +1,9 @@
 spring:
   application:
     name: mbotamapay-backend
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
   datasource:

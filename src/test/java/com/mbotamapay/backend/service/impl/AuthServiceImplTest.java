@@ -60,7 +60,8 @@ class AuthServiceImplTest {
     @BeforeEach
     void setUp() {
         registerRequest = RegisterRequest.builder()
-                .name("Test User")
+                .firstName("Test")
+                .lastName("User")
                 .email("test@example.com")
                 .phone("1234567890")
                 .password("password123")
@@ -77,7 +78,7 @@ class AuthServiceImplTest {
 
         User savedUser = User.builder()
                 .id(1L)
-                .name(registerRequest.getName())
+                .name(registerRequest.getFirstName() + " " + registerRequest.getLastName())
                 .email(registerRequest.getEmail())
                 .phone(registerRequest.getPhone())
                 .passwordHash("hashedPassword")
@@ -96,8 +97,9 @@ class AuthServiceImplTest {
         // Assert
         assertNotNull(response);
         assertEquals("jwt-token", response.getToken());
-        assertEquals(registerRequest.getName(), response.getName());
-        assertEquals(registerRequest.getEmail(), response.getEmail());
+        assertEquals(registerRequest.getFirstName(), response.getUser().getFirstName());
+        assertEquals(registerRequest.getLastName(), response.getUser().getLastName());
+        assertEquals(registerRequest.getEmail(), response.getUser().getEmail());
         verify(walletService, times(1)).createWallet(any(User.class));
     }
 

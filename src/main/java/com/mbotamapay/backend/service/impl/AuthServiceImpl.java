@@ -60,7 +60,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         User user = User.builder()
-                .name(request.getName())
+                .name(request.getFirstName() + " " + request.getLastName())
                 .email(request.getEmail())
                 .phone(request.getPhone())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
@@ -82,9 +82,7 @@ public class AuthServiceImpl implements AuthService {
         return AuthResponse.builder()
                 .token(token)
                 .refreshToken(refreshToken)
-                .name(user.getName())
-                .email(user.getEmail())
-                .role(user.getRole().name())
+                .user(mapToUserResponse(user))
                 .build();
     }
 
@@ -174,9 +172,7 @@ public class AuthServiceImpl implements AuthService {
         return AuthResponse.builder()
                 .token(token)
                 .refreshToken(refreshToken)
-                .name(user.getName())
-                .email(user.getEmail())
-                .role(user.getRole().name())
+                .user(mapToUserResponse(user))
                 .build();
     }
 
@@ -226,9 +222,7 @@ public class AuthServiceImpl implements AuthService {
         return AuthResponse.builder()
                 .token(newToken)
                 .refreshToken(newRefreshToken)
-                .name(user.getName())
-                .email(user.getEmail())
-                .role(user.getRole().name())
+                .user(mapToUserResponse(user))
                 .build();
     }
 
@@ -342,5 +336,24 @@ public class AuthServiceImpl implements AuthService {
         details.put("userId", user.getId());
         details.put("email", user.getEmail());
         auditService.logSecurityEvent("PASSWORD_RESET_COMPLETED", "WARNING", details);
+    }
+
+    private com.mbotamapay.backend.dto.user.UserResponse mapToUserResponse(User user) {
+        String[] nameParts = user.getName().split(" ", 2);
+        String firstName = nameParts.length > 0 ? nameParts[0] : "";
+        String lastName = nameParts.length > 1 ? nameParts[1] : "";
+
+        return com.mbotamapay.backend.dto.user.UserResponse.builder()
+                .id(user.getId())
+                .firstName(firstName)
+                .lastName(lastName)
+                .email(user.getEmail())
+                .phone(user.getPhone())
+                .role(user.getRole().name())
+                .kycLevel(user.getKycLevel().name())
+                .active(user.isActive())
+                .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
+                .build();
     }
 }

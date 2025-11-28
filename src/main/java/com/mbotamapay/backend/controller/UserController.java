@@ -36,15 +36,21 @@ public class UserController {
     public ResponseEntity<UserResponse> getProfile(@AuthenticationPrincipal CustomUserDetails userDetails) {
         User user = userDetails.getUser();
 
+        String[] nameParts = user.getName().split(" ", 2);
+        String firstName = nameParts.length > 0 ? nameParts[0] : "";
+        String lastName = nameParts.length > 1 ? nameParts[1] : "";
+
         UserResponse response = UserResponse.builder()
                 .id(user.getId())
-                .name(user.getName())
+                .firstName(firstName)
+                .lastName(lastName)
                 .email(user.getEmail())
                 .phone(user.getPhone())
                 .role(user.getRole().name())
                 .kycLevel(user.getKycLevel().name())
                 .active(user.isActive())
                 .createdAt(user.getCreatedAt())
+                .updatedAt(user.getUpdatedAt())
                 .build();
 
         return ResponseEntity.ok(response);
@@ -55,7 +61,7 @@ public class UserController {
     public ResponseEntity<User> updateProfile(@AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody UpdateProfileRequest request) {
         User user = userDetails.getUser();
-        user.setName(request.getName());
+        user.setName(request.getFirstName() + " " + request.getLastName());
         user.setEmail(request.getEmail());
         user.setPhone(request.getPhone());
 

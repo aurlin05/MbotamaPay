@@ -1,5 +1,6 @@
 package com.mbotamapay.backend.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -45,6 +46,7 @@ public class User {
 
     @ManyToOne
     @JoinColumn(name = "referrer_id")
+    @JsonIgnoreProperties({ "referrer", "passwordHash", "failedLoginAttempts", "lockedUntil" })
     private User referrer;
 
     private boolean active;

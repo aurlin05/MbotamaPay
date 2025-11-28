@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import com.mbotamapay.backend.dto.user.UserResponse;
 
 @Data
 @Builder
@@ -12,7 +13,5 @@ import lombok.NoArgsConstructor;
 public class AuthResponse {
     private String token;
     private String refreshToken;
-    private String name;
-    private String email;
-    private String role;
+    private UserResponse user;
 }
