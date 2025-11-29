@@ -116,7 +116,7 @@ public class DevController {
                 .map(admin -> {
                     Map<String, Object> status = new HashMap<>();
                     status.put("email", admin.getEmail());
-                    status.put("name", admin.getName());
+                    status.put("name", admin.getFirstName() + " " + admin.getLastName());
                     status.put("active", admin.isActive());
                     status.put("failedLoginAttempts", admin.getFailedLoginAttempts());
                     status.put("lockedUntil", admin.getLockedUntil());

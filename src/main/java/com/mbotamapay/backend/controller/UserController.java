@@ -36,14 +36,10 @@ public class UserController {
     public ResponseEntity<UserResponse> getProfile(@AuthenticationPrincipal CustomUserDetails userDetails) {
         User user = userDetails.getUser();
 
-        String[] nameParts = user.getName().split(" ", 2);
-        String firstName = nameParts.length > 0 ? nameParts[0] : "";
-        String lastName = nameParts.length > 1 ? nameParts[1] : "";
-
         UserResponse response = UserResponse.builder()
                 .id(user.getId())
-                .firstName(firstName)
-                .lastName(lastName)
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
                 .email(user.getEmail())
                 .phone(user.getPhone())
                 .role(user.getRole().name())
@@ -61,7 +57,8 @@ public class UserController {
     public ResponseEntity<User> updateProfile(@AuthenticationPrincipal CustomUserDetails userDetails,
             @Valid @RequestBody UpdateProfileRequest request) {
         User user = userDetails.getUser();
-        user.setName(request.getFirstName() + " " + request.getLastName());
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
         user.setEmail(request.getEmail());
         user.setPhone(request.getPhone());
 

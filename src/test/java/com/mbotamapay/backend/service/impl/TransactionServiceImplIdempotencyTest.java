@@ -33,224 +33,227 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class TransactionServiceImplIdempotencyTest {
 
-    @Mock
-    private WalletRepository walletRepository;
+        @Mock
+        private WalletRepository walletRepository;
 
-    @Mock
-    private WalletService walletService;
+        @Mock
+        private WalletService walletService;
 
-    @Mock
-    private TransactionRepository transactionRepository;
+        @Mock
+        private TransactionRepository transactionRepository;
 
-    @Mock
-    private UserRepository userRepository;
+        @Mock
+        private UserRepository userRepository;
 
-    @Mock
-    private ApplicationEventPublisher eventPublisher;
+        @Mock
+        private ApplicationEventPublisher eventPublisher;
 
-    @Mock
-    private TransactionLimitValidator limitValidator;
+        @Mock
+        private TransactionLimitValidator limitValidator;
 
-    @Mock
-    private Counter transactionCounter;
+        @Mock
+        private Counter transactionCounter;
 
-    @Mock
-    private Counter p2pCounter;
+        @Mock
+        private Counter p2pCounter;
 
-    @Mock
-    private EmailService emailService;
+        @Mock
+        private EmailService emailService;
 
-    @Mock
-    private IdempotencyService idempotencyService;
+        @Mock
+        private IdempotencyService idempotencyService;
 
-    @Mock
-    private com.mbotamapay.backend.service.CacheService cacheService;
+        @Mock
+        private com.mbotamapay.backend.service.CacheService cacheService;
 
-    @Mock
-    private com.mbotamapay.backend.service.AuditService auditService;
+        @Mock
+        private com.mbotamapay.backend.service.AuditService auditService;
 
-    @InjectMocks
-    private TransactionServiceImpl transactionService;
+        @InjectMocks
+        private TransactionServiceImpl transactionService;
 
-    private User sender;
-    private User recipient;
-    private Wallet senderWallet;
-    private Wallet receiverWallet;
-    private TransferRequest request;
+        private User sender;
+        private User recipient;
+        private Wallet senderWallet;
+        private Wallet receiverWallet;
+        private TransferRequest request;
 
-    @BeforeEach
-    void setUp() {
-        sender = User.builder()
-                .id(1L)
-                .email("sender@example.com")
-                .name("Sender User")
-                .build();
+        @BeforeEach
+        void setUp() {
+                sender = User.builder()
+                                .id(1L)
+                                .email("sender@example.com")
+                                .firstName("Sender")
+                                .lastName("User")
+                                .build();
 
-        recipient = User.builder()
-                .id(2L)
-                .email("recipient@example.com")
-                .name("Recipient User")
-                .build();
+                recipient = User.builder()
+                                .id(2L)
+                                .email("recipient@example.com")
+                                .firstName("Recipient")
+                                .lastName("User")
+                                .build();
 
-        senderWallet = Wallet.builder()
-                .id(1L)
-                .user(sender)
-                .balance(new BigDecimal("1000.00"))
-                .currency("XAF")
-                .build();
+                senderWallet = Wallet.builder()
+                                .id(1L)
+                                .user(sender)
+                                .balance(new BigDecimal("1000.00"))
+                                .currency("XAF")
+                                .build();
 
-        receiverWallet = Wallet.builder()
-                .id(2L)
-                .user(recipient)
-                .balance(new BigDecimal("500.00"))
-                .currency("XAF")
-                .build();
+                receiverWallet = Wallet.builder()
+                                .id(2L)
+                                .user(recipient)
+                                .balance(new BigDecimal("500.00"))
+                                .currency("XAF")
+                                .build();
 
-        request = TransferRequest.builder()
-                .recipientIdentifier("recipient@example.com")
-                .amount(new BigDecimal("100.00"))
-                .description("Test transfer")
-                .idempotencyKey("test-idempotency-key-123")
-                .build();
-    }
+                request = TransferRequest.builder()
+                                .recipientIdentifier("recipient@example.com")
+                                .amount(new BigDecimal("100.00"))
+                                .description("Test transfer")
+                                .idempotencyKey("test-idempotency-key-123")
+                                .build();
+        }
 
-    @Test
-    void sendMoney_ShouldReturnCachedResult_WhenIdempotencyKeyExists() {
-        // Arrange
-        TransactionResponse cachedResponse = TransactionResponse.builder()
-                .reference("cached-ref-123")
-                .status("SUCCESS")
-                .amount(new BigDecimal("100.00"))
-                .build();
+        @Test
+        void sendMoney_ShouldReturnCachedResult_WhenIdempotencyKeyExists() {
+                // Arrange
+                TransactionResponse cachedResponse = TransactionResponse.builder()
+                                .reference("cached-ref-123")
+                                .status("SUCCESS")
+                                .amount(new BigDecimal("100.00"))
+                                .build();
 
-        when(idempotencyService.checkIdempotency("test-idempotency-key-123"))
-                .thenReturn(Optional.of(cachedResponse));
+                when(idempotencyService.checkIdempotency("test-idempotency-key-123"))
+                                .thenReturn(Optional.of(cachedResponse));
 
-        // Act
-        TransactionResponse result = transactionService.sendMoney(sender, request);
+                // Act
+                TransactionResponse result = transactionService.sendMoney(sender, request);
 
-        // Assert
-        assertNotNull(result);
-        assertEquals("cached-ref-123", result.getReference());
-        assertEquals("SUCCESS", result.getStatus());
-        assertEquals(new BigDecimal("100.00"), result.getAmount());
+                // Assert
+                assertNotNull(result);
+                assertEquals("cached-ref-123", result.getReference());
+                assertEquals("SUCCESS", result.getStatus());
+                assertEquals(new BigDecimal("100.00"), result.getAmount());
 
-        // Verify that no transaction processing occurred
-        verify(idempotencyService).checkIdempotency("test-idempotency-key-123");
-        verify(idempotencyService, never()).markAsProcessing(anyString());
-        verify(walletService, never()).debit(anyLong(), any(BigDecimal.class));
-        verify(walletService, never()).credit(anyLong(), any(BigDecimal.class));
-        verify(transactionRepository, never()).save(any(Transaction.class));
-    }
+                // Verify that no transaction processing occurred
+                verify(idempotencyService).checkIdempotency("test-idempotency-key-123");
+                verify(idempotencyService, never()).markAsProcessing(anyString());
+                verify(walletService, never()).debit(anyLong(), any(BigDecimal.class));
+                verify(walletService, never()).credit(anyLong(), any(BigDecimal.class));
+                verify(transactionRepository, never()).save(any(Transaction.class));
+        }
 
-    @Test
-    void sendMoney_ShouldProcessTransaction_WhenIdempotencyKeyIsNew() {
-        // Arrange
-        when(idempotencyService.checkIdempotency("test-idempotency-key-123"))
-                .thenReturn(Optional.empty());
-        when(idempotencyService.isProcessing("test-idempotency-key-123"))
-                .thenReturn(false);
+        @Test
+        void sendMoney_ShouldProcessTransaction_WhenIdempotencyKeyIsNew() {
+                // Arrange
+                when(idempotencyService.checkIdempotency("test-idempotency-key-123"))
+                                .thenReturn(Optional.empty());
+                when(idempotencyService.isProcessing("test-idempotency-key-123"))
+                                .thenReturn(false);
 
-        when(userRepository.findByEmail("recipient@example.com"))
-                .thenReturn(Optional.of(recipient));
-        when(walletRepository.findByUser(sender))
-                .thenReturn(Optional.of(senderWallet));
-        when(walletRepository.findByUser(recipient))
-                .thenReturn(Optional.of(receiverWallet));
+                when(userRepository.findByEmail("recipient@example.com"))
+                                .thenReturn(Optional.of(recipient));
+                when(walletRepository.findByUser(sender))
+                                .thenReturn(Optional.of(senderWallet));
+                when(walletRepository.findByUser(recipient))
+                                .thenReturn(Optional.of(receiverWallet));
 
-        Transaction savedTransaction = Transaction.builder()
-                .id(1L)
-                .reference("new-ref-456")
-                .idempotencyKey("test-idempotency-key-123")
-                .senderWallet(senderWallet)
-                .receiverWallet(receiverWallet)
-                .amount(new BigDecimal("100.00"))
-                .fee(new BigDecimal("2.00"))
-                .type(TransactionType.P2P_TRANSFER)
-                .status(TransactionStatus.SUCCESS)
-                .description("Test transfer")
-                .build();
+                Transaction savedTransaction = Transaction.builder()
+                                .id(1L)
+                                .reference("new-ref-456")
+                                .idempotencyKey("test-idempotency-key-123")
+                                .senderWallet(senderWallet)
+                                .receiverWallet(receiverWallet)
+                                .amount(new BigDecimal("100.00"))
+                                .fee(new BigDecimal("2.00"))
+                                .type(TransactionType.P2P_TRANSFER)
+                                .status(TransactionStatus.SUCCESS)
+                                .description("Test transfer")
+                                .build();
 
-        when(transactionRepository.save(any(Transaction.class)))
-                .thenReturn(savedTransaction);
+                when(transactionRepository.save(any(Transaction.class)))
+                                .thenReturn(savedTransaction);
 
-        // Act
-        TransactionResponse result = transactionService.sendMoney(sender, request);
+                // Act
+                TransactionResponse result = transactionService.sendMoney(sender, request);
 
-        // Assert
-        assertNotNull(result);
-        assertEquals("new-ref-456", result.getReference());
-        assertEquals("SUCCESS", result.getStatus());
+                // Assert
+                assertNotNull(result);
+                assertEquals("new-ref-456", result.getReference());
+                assertEquals("SUCCESS", result.getStatus());
 
-        // Verify idempotency flow - key methods were called
-        verify(idempotencyService, atLeastOnce()).checkIdempotency("test-idempotency-key-123");
-        verify(idempotencyService, atLeastOnce()).isProcessing("test-idempotency-key-123");
-        verify(idempotencyService).markAsProcessing("test-idempotency-key-123");
-        verify(idempotencyService).storeIdempotencyResult(eq("test-idempotency-key-123"), any(TransactionResponse.class));
+                // Verify idempotency flow - key methods were called
+                verify(idempotencyService, atLeastOnce()).checkIdempotency("test-idempotency-key-123");
+                verify(idempotencyService, atLeastOnce()).isProcessing("test-idempotency-key-123");
+                verify(idempotencyService).markAsProcessing("test-idempotency-key-123");
+                verify(idempotencyService).storeIdempotencyResult(eq("test-idempotency-key-123"),
+                                any(TransactionResponse.class));
 
-        // Verify transaction processing occurred
-        verify(limitValidator).validateTransactionLimit(sender, new BigDecimal("100.00"));
-    }
+                // Verify transaction processing occurred
+                verify(limitValidator).validateTransactionLimit(sender, new BigDecimal("100.00"));
+        }
 
-    @Test
-    void sendMoney_ShouldProcessWithoutIdempotency_WhenKeyIsNull() {
-        // Arrange
-        TransferRequest requestWithoutKey = TransferRequest.builder()
-                .recipientIdentifier("recipient@example.com")
-                .amount(new BigDecimal("100.00"))
-                .description("Test transfer")
-                .idempotencyKey(null)
-                .build();
+        @Test
+        void sendMoney_ShouldProcessWithoutIdempotency_WhenKeyIsNull() {
+                // Arrange
+                TransferRequest requestWithoutKey = TransferRequest.builder()
+                                .recipientIdentifier("recipient@example.com")
+                                .amount(new BigDecimal("100.00"))
+                                .description("Test transfer")
+                                .idempotencyKey(null)
+                                .build();
 
-        when(userRepository.findByEmail("recipient@example.com"))
-                .thenReturn(Optional.of(recipient));
-        when(walletRepository.findByUser(sender))
-                .thenReturn(Optional.of(senderWallet));
-        when(walletRepository.findByUser(recipient))
-                .thenReturn(Optional.of(receiverWallet));
+                when(userRepository.findByEmail("recipient@example.com"))
+                                .thenReturn(Optional.of(recipient));
+                when(walletRepository.findByUser(sender))
+                                .thenReturn(Optional.of(senderWallet));
+                when(walletRepository.findByUser(recipient))
+                                .thenReturn(Optional.of(receiverWallet));
 
-        Transaction savedTransaction = Transaction.builder()
-                .id(1L)
-                .reference("new-ref-789")
-                .senderWallet(senderWallet)
-                .receiverWallet(receiverWallet)
-                .amount(new BigDecimal("100.00"))
-                .fee(new BigDecimal("2.00"))
-                .type(TransactionType.P2P_TRANSFER)
-                .status(TransactionStatus.SUCCESS)
-                .description("Test transfer")
-                .build();
+                Transaction savedTransaction = Transaction.builder()
+                                .id(1L)
+                                .reference("new-ref-789")
+                                .senderWallet(senderWallet)
+                                .receiverWallet(receiverWallet)
+                                .amount(new BigDecimal("100.00"))
+                                .fee(new BigDecimal("2.00"))
+                                .type(TransactionType.P2P_TRANSFER)
+                                .status(TransactionStatus.SUCCESS)
+                                .description("Test transfer")
+                                .build();
 
-        when(transactionRepository.save(any(Transaction.class)))
-                .thenReturn(savedTransaction);
+                when(transactionRepository.save(any(Transaction.class)))
+                                .thenReturn(savedTransaction);
 
-        // Act
-        TransactionResponse result = transactionService.sendMoney(sender, requestWithoutKey);
+                // Act
+                TransactionResponse result = transactionService.sendMoney(sender, requestWithoutKey);
 
-        // Assert
-        assertNotNull(result);
-        assertEquals("new-ref-789", result.getReference());
+                // Assert
+                assertNotNull(result);
+                assertEquals("new-ref-789", result.getReference());
 
-        // Verify idempotency service was not called
-        verify(idempotencyService, never()).checkIdempotency(anyString());
-        verify(idempotencyService, never()).markAsProcessing(anyString());
-        verify(idempotencyService, never()).storeIdempotencyResult(anyString(), any());
-    }
+                // Verify idempotency service was not called
+                verify(idempotencyService, never()).checkIdempotency(anyString());
+                verify(idempotencyService, never()).markAsProcessing(anyString());
+                verify(idempotencyService, never()).storeIdempotencyResult(anyString(), any());
+        }
 
-    @Test
-    void sendMoney_ShouldThrowException_WhenTransactionIsProcessingTooLong() {
-        // Arrange
-        when(idempotencyService.checkIdempotency("test-idempotency-key-123"))
-                .thenReturn(Optional.empty());
-        when(idempotencyService.isProcessing("test-idempotency-key-123"))
-                .thenReturn(true); // Always return true to simulate long processing
+        @Test
+        void sendMoney_ShouldThrowException_WhenTransactionIsProcessingTooLong() {
+                // Arrange
+                when(idempotencyService.checkIdempotency("test-idempotency-key-123"))
+                                .thenReturn(Optional.empty());
+                when(idempotencyService.isProcessing("test-idempotency-key-123"))
+                                .thenReturn(true); // Always return true to simulate long processing
 
-        // Act & Assert
-        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
-            transactionService.sendMoney(sender, request);
-        });
+                // Act & Assert
+                IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+                        transactionService.sendMoney(sender, request);
+                });
 
-        assertTrue(exception.getMessage().contains("taking too long"));
-        verify(idempotencyService, never()).markAsProcessing(anyString());
-    }
+                assertTrue(exception.getMessage().contains("taking too long"));
+                verify(idempotencyService, never()).markAsProcessing(anyString());
+        }
 }

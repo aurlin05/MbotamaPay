@@ -116,9 +116,9 @@ public class PaymentRequestServiceImpl implements PaymentRequestService {
     private PaymentRequestResponse toResponse(PaymentRequest request) {
         return PaymentRequestResponse.builder()
                 .id(request.getId())
-                .requesterName(request.getRequester().getName())
+                .requesterName(request.getRequester().getFirstName() + " " + request.getRequester().getLastName())
                 .requesterEmail(request.getRequester().getEmail())
-                .payerName(request.getPayer().getName())
+                .payerName(request.getPayer().getFirstName() + " " + request.getPayer().getLastName())
                 .payerEmail(request.getPayer().getEmail())
                 .amount(request.getAmount())
                 .status(request.getStatus().name())

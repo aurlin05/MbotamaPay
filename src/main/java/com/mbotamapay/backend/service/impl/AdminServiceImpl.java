@@ -76,7 +76,7 @@ public class AdminServiceImpl implements AdminService {
                                 .orElseThrow(() -> new RuntimeException("User not found"));
                 user.setActive(false);
                 userRepository.save(user);
-                
+
                 // Log admin action
                 User admin = getCurrentAdmin();
                 java.util.Map<String, Object> details = new java.util.HashMap<>();
@@ -84,7 +84,7 @@ public class AdminServiceImpl implements AdminService {
                 details.put("targetUserId", userId);
                 details.put("targetUserEmail", user.getEmail());
                 auditService.logAdminAction("BAN_USER", admin, details);
-                
+
                 log.info("User {} banned by admin {}", userId, admin != null ? admin.getEmail() : "SYSTEM");
         }
 
@@ -95,7 +95,7 @@ public class AdminServiceImpl implements AdminService {
                                 .orElseThrow(() -> new RuntimeException("User not found"));
                 user.setActive(true);
                 userRepository.save(user);
-                
+
                 // Log admin action
                 User admin = getCurrentAdmin();
                 java.util.Map<String, Object> details = new java.util.HashMap<>();
@@ -103,24 +103,26 @@ public class AdminServiceImpl implements AdminService {
                 details.put("targetUserId", userId);
                 details.put("targetUserEmail", user.getEmail());
                 auditService.logAdminAction("UNBAN_USER", admin, details);
-                
+
                 log.info("User {} unbanned by admin {}", userId, admin != null ? admin.getEmail() : "SYSTEM");
         }
-        
+
         /**
          * Get the current authenticated admin user from SecurityContext
          */
         private User getCurrentAdmin() {
                 try {
-                        org.springframework.security.core.Authentication authentication = 
-                                org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
-                        if (authentication != null && authentication.getPrincipal() instanceof org.springframework.security.core.userdetails.UserDetails) {
-                                org.springframework.security.core.userdetails.UserDetails userDetails = 
-                                    (org.springframework.security.core.userdetails.UserDetails) authentication.getPrincipal();
-                                
+                        org.springframework.security.core.Authentication authentication = org.springframework.security.core.context.SecurityContextHolder
+                                        .getContext().getAuthentication();
+                        if (authentication != null && authentication
+                                        .getPrincipal() instanceof org.springframework.security.core.userdetails.UserDetails) {
+                                org.springframework.security.core.userdetails.UserDetails userDetails = (org.springframework.security.core.userdetails.UserDetails) authentication
+                                                .getPrincipal();
+
                                 // If using CustomUserDetails, we can get the User object directly
                                 if (userDetails instanceof com.mbotamapay.backend.security.CustomUserDetails) {
-                                        return ((com.mbotamapay.backend.security.CustomUserDetails) userDetails).getUser();
+                                        return ((com.mbotamapay.backend.security.CustomUserDetails) userDetails)
+                                                        .getUser();
                                 }
                         }
                 } catch (Exception e) {
@@ -132,7 +134,8 @@ public class AdminServiceImpl implements AdminService {
         private UserResponse mapToUserResponse(User user) {
                 return UserResponse.builder()
                                 .id(user.getId())
-                                .name(user.getName())
+                                .firstName(user.getFirstName())
+                                .lastName(user.getLastName())
                                 .email(user.getEmail())
                                 .phone(user.getPhone())
                                 .role(user.getRole().name())

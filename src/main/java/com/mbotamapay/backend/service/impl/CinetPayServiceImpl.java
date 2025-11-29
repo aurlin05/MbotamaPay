@@ -47,7 +47,7 @@ public class CinetPayServiceImpl implements CinetPayService {
         paymentData.put("amount", request.getAmount());
         paymentData.put("currency", currency);
         paymentData.put("description", "Wallet Top-up - MbotamaPay");
-        paymentData.put("customer_name", user.getName());
+        paymentData.put("customer_name", user.getFirstName() + " " + user.getLastName());
         paymentData.put("customer_email", user.getEmail());
         paymentData.put("customer_phone_number", user.getPhone());
         paymentData.put("notify_url", appProperties.getCinetpay().getNotifyUrl());

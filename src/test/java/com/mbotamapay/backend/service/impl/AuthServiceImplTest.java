@@ -78,7 +78,8 @@ class AuthServiceImplTest {
 
         User savedUser = User.builder()
                 .id(1L)
-                .name(registerRequest.getFirstName() + " " + registerRequest.getLastName())
+                .firstName(registerRequest.getFirstName())
+                .lastName(registerRequest.getLastName())
                 .email(registerRequest.getEmail())
                 .phone(registerRequest.getPhone())
                 .passwordHash("hashedPassword")

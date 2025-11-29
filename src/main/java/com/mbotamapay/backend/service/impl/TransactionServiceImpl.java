@@ -52,76 +52,82 @@ public class TransactionServiceImpl implements TransactionService {
                         // Check if this request was already processed
                         var existingResult = idempotencyService.checkIdempotency(request.getIdempotencyKey());
                         if (existingResult.isPresent()) {
-                                log.info("Returning cached result for idempotency key: {}", request.getIdempotencyKey());
+                                log.info("Returning cached result for idempotency key: {}",
+                                                request.getIdempotencyKey());
                                 return existingResult.get();
                         }
-                        
+
                         // Check if request is currently being processed
                         // Wait for up to 30 seconds for the original request to complete
                         int maxWaitAttempts = 30;
                         int waitAttempt = 0;
-                        while (idempotencyService.isProcessing(request.getIdempotencyKey()) && waitAttempt < maxWaitAttempts) {
-                                log.info("Request with idempotency key {} is being processed, waiting... (attempt {}/{})", 
-                                        request.getIdempotencyKey(), waitAttempt + 1, maxWaitAttempts);
+                        while (idempotencyService.isProcessing(request.getIdempotencyKey())
+                                        && waitAttempt < maxWaitAttempts) {
+                                log.info("Request with idempotency key {} is being processed, waiting... (attempt {}/{})",
+                                                request.getIdempotencyKey(), waitAttempt + 1, maxWaitAttempts);
                                 try {
                                         Thread.sleep(1000); // Wait 1 second
                                         waitAttempt++;
-                                        
+
                                         // Check if result is now available
                                         var result = idempotencyService.checkIdempotency(request.getIdempotencyKey());
                                         if (result.isPresent()) {
-                                                log.info("Original request completed, returning result for idempotency key: {}", 
-                                                        request.getIdempotencyKey());
+                                                log.info("Original request completed, returning result for idempotency key: {}",
+                                                                request.getIdempotencyKey());
                                                 return result.get();
                                         }
                                 } catch (InterruptedException e) {
                                         Thread.currentThread().interrupt();
-                                        throw new IllegalStateException("Interrupted while waiting for transaction to complete", e);
+                                        throw new IllegalStateException(
+                                                        "Interrupted while waiting for transaction to complete", e);
                                 }
                         }
-                        
+
                         // If still processing after max wait, throw exception
                         if (idempotencyService.isProcessing(request.getIdempotencyKey())) {
-                                log.error("Request with idempotency key {} is still being processed after {} seconds", 
-                                        request.getIdempotencyKey(), maxWaitAttempts);
-                                throw new IllegalStateException("Transaction is taking too long to process. Please try again later.");
+                                log.error("Request with idempotency key {} is still being processed after {} seconds",
+                                                request.getIdempotencyKey(), maxWaitAttempts);
+                                throw new IllegalStateException(
+                                                "Transaction is taking too long to process. Please try again later.");
                         }
-                        
+
                         // Mark as processing
                         idempotencyService.markAsProcessing(request.getIdempotencyKey());
                 }
-                
+
                 try {
                         // Process the transaction with idempotency key
                         TransactionResponse response = processTransactionWithIdempotency(
-                                sender, 
-                                request.getRecipientIdentifier(), 
-                                request.getAmount(), 
-                                request.getDescription(),
-                                request.getIdempotencyKey()
-                        );
-                        
+                                        sender,
+                                        request.getRecipientIdentifier(),
+                                        request.getAmount(),
+                                        request.getDescription(),
+                                        request.getIdempotencyKey());
+
                         // Store the result for idempotency if key was provided
                         if (request.getIdempotencyKey() != null && !request.getIdempotencyKey().isBlank()) {
                                 idempotencyService.storeIdempotencyResult(request.getIdempotencyKey(), response);
                         }
-                        
+
                         return response;
                 } catch (Exception e) {
-                        log.error("Error processing transaction with idempotency key: {}", request.getIdempotencyKey(), e);
-                        // Note: We don't clean up the PROCESSING state here because Redis TTL will handle it
+                        log.error("Error processing transaction with idempotency key: {}", request.getIdempotencyKey(),
+                                        e);
+                        // Note: We don't clean up the PROCESSING state here because Redis TTL will
+                        // handle it
                         // This prevents race conditions where cleanup might interfere with retry logic
                         throw e;
                 }
         }
-        
+
         /**
          * Process a transaction with optional idempotency key.
-         * This method is extracted to allow setting the idempotency key during transaction creation.
+         * This method is extracted to allow setting the idempotency key during
+         * transaction creation.
          */
-        private TransactionResponse processTransactionWithIdempotency(User sender, String recipientEmail, 
+        private TransactionResponse processTransactionWithIdempotency(User sender, String recipientEmail,
                         BigDecimal amount, String description, String idempotencyKey) {
-                
+
                 log.info("Processing P2P transfer: {} -> {} for {} XAF", sender.getEmail(), recipientEmail, amount);
 
                 // Validate transaction limit based on KYC
@@ -210,7 +216,8 @@ public class TransactionServiceImpl implements TransactionService {
                                                         .amount(referralBonus)
                                                         .type(TransactionType.REFERRAL_BONUS)
                                                         .status(TransactionStatus.SUCCESS)
-                                                        .description("Referral bonus from " + sender.getName())
+                                                        .description("Referral bonus from " + sender.getFirstName()
+                                                                        + " " + sender.getLastName())
                                                         .build();
                                         Transaction savedReferral = transactionRepository.save(referralTx);
                                         auditService.logTransaction(savedReferral, sender);
@@ -225,7 +232,9 @@ public class TransactionServiceImpl implements TransactionService {
                                                 "<p>Transaction Reference: %s</p>" +
                                                 "<p>Fee: %s XAF</p>" +
                                                 "<p>Date: %s</p>",
-                                amount, receiverWallet.getUser().getName(), saved.getReference(), fee,
+                                amount,
+                                receiverWallet.getUser().getFirstName() + " " + receiverWallet.getUser().getLastName(),
+                                saved.getReference(), fee,
                                 java.time.LocalDateTime.now());
                 emailService.sendEmail(sender.getEmail(), "Transaction Receipt - MbotamaPay", receiptContent);
 
@@ -239,7 +248,7 @@ public class TransactionServiceImpl implements TransactionService {
                 // Invalidate transaction history cache for both sender and receiver
                 cacheService.evictTransactionHistoryCache(sender.getId());
                 cacheService.evictTransactionHistoryCache(recipient.getId());
-                
+
                 // Also invalidate for referrer if applicable
                 if (sender.getReferrer() != null) {
                         cacheService.evictTransactionHistoryCache(sender.getReferrer().getId());

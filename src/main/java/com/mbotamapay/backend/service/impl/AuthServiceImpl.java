@@ -60,7 +60,8 @@ public class AuthServiceImpl implements AuthService {
         }
 
         User user = User.builder()
-                .name(request.getFirstName() + " " + request.getLastName())
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
                 .email(request.getEmail())
                 .phone(request.getPhone())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
@@ -339,14 +340,10 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private com.mbotamapay.backend.dto.user.UserResponse mapToUserResponse(User user) {
-        String[] nameParts = user.getName().split(" ", 2);
-        String firstName = nameParts.length > 0 ? nameParts[0] : "";
-        String lastName = nameParts.length > 1 ? nameParts[1] : "";
-
         return com.mbotamapay.backend.dto.user.UserResponse.builder()
                 .id(user.getId())
-                .firstName(firstName)
-                .lastName(lastName)
+                .firstName(user.getFirstName())
+                .lastName(user.getLastName())
                 .email(user.getEmail())
                 .phone(user.getPhone())
                 .role(user.getRole().name())

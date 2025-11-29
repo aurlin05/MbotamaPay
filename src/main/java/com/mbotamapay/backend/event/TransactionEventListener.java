@@ -30,7 +30,8 @@ public class TransactionEventListener {
                     "Payment Sent",
                     String.format("You sent %.2f XAF to %s",
                             transaction.getAmount(),
-                            transaction.getReceiverWallet().getUser().getName()),
+                            transaction.getReceiverWallet().getUser().getFirstName() + " "
+                                    + transaction.getReceiverWallet().getUser().getLastName()),
                     NotificationType.PAYMENT_SENT);
         }
 
@@ -41,7 +42,9 @@ public class TransactionEventListener {
                     "Payment Received",
                     String.format("You received %.2f XAF from %s",
                             transaction.getAmount(),
-                            transaction.getSenderWallet() != null ? transaction.getSenderWallet().getUser().getName()
+                            transaction.getSenderWallet() != null
+                                    ? transaction.getSenderWallet().getUser().getFirstName() + " "
+                                            + transaction.getSenderWallet().getUser().getLastName()
                                     : "Unknown"),
                     NotificationType.PAYMENT_RECEIVED);
         }
